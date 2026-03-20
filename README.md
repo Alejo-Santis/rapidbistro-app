@@ -1,59 +1,144 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# RapidBistro
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sistema de gestión de reservaciones de restaurante.
 
-## About Laravel
+## Stack
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+| Capa | Tecnología |
+| ---- | ---------- |
+| Backend | Laravel 12, PHP 8.x |
+| Base de datos | PostgreSQL |
+| Frontend | Svelte 5, InertiaJS v2 |
+| Estilos | Tailwind CSS v4 |
+| Autorización | Spatie Laravel Permission v7 |
+| Notificaciones UI | svelte-sonner |
+| Build | Vite 8 |
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Requisitos
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- PHP >= 8.2
+- Composer
+- Node.js >= 20
+- PostgreSQL
 
-## Learning Laravel
+## Instalación
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+```bash
+# Clonar el repositorio
+git clone <repo-url>
+cd rapidbistro-app
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+# Dependencias PHP
+composer install
 
-## Laravel Sponsors
+# Dependencias JS
+npm install
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+# Variables de entorno
+cp .env.example .env
+php artisan key:generate
+```
 
-### Premium Partners
+Configurar la conexión a base de datos en `.env`:
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+```env
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=rapidbistro
+DB_USERNAME=postgres
+DB_PASSWORD=secret
+```
 
-## Contributing
+```bash
+# Migraciones y seeders
+php artisan migrate --seed
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+# Compilar assets
+npm run build
 
-## Code of Conduct
+# Servidor de desarrollo
+php artisan serve
+npm run dev
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Usuarios de prueba
 
-## Security Vulnerabilities
+| Email | Contraseña | Rol |
+| ----- | ---------- | --- |
+| `admin@rapidbistro.com` | `password` | super-admin |
+| `recepcion@rapidbistro.com` | `password` | receptionist |
+| `staff@rapidbistro.com` | `password` | staff |
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Roles y acceso
 
-## License
+| Rol | Acceso |
+| --- | ------ |
+| `super-admin` | Todo el sistema |
+| `admin` | Todo el sistema |
+| `receptionist` | Reservaciones, mesas, zonas, dashboard |
+| `staff` | Dashboard, reservaciones (solo lectura) |
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Las rutas de **Horarios**, **Usuarios** y **Configuración** requieren rol `admin` o `super-admin`.
+
+## Módulos implementados
+
+### Reservaciones
+
+- Listado con filtros por estado y búsqueda
+- Crear reservación (mesa, cliente, personas, fecha/hora, notas)
+- Editar reservación
+- Eliminar reservación
+
+### Mesas
+
+- CRUD completo con modal inline
+- Asignación a zona, capacidad y estado
+
+### Zonas
+
+- CRUD completo con modal inline
+
+### Horarios (`/time-slots`)
+
+- Gestión de franjas horarias por día de la semana
+- Solo admin
+
+### Usuarios (`/users`)
+
+- Gestión de usuarios y asignación de roles
+- Solo admin
+
+### Configuración del restaurante (`/restaurant/settings`)
+
+- Nombre, teléfono, dirección, capacidad máxima, configuraciones adicionales
+- Solo admin
+
+### Perfil (`/profile`)
+
+- El usuario puede actualizar nombre, email, teléfono y contraseña
+
+## Estructura de carpetas relevante
+
+```text
+app/
+  Http/
+    Controllers/     # Auth, Dashboard, Reservations, Zones, Tables, Users, TimeSlots, Restaurant, Profile
+    Middleware/      # HandleInertiaRequests (shared data: auth.user, flash)
+  Models/            # User, Restaurant, Zone, Table, TimeSlot, Reservation, ReservationStatusLog
+
+resources/
+  js/
+    Layouts/         # AppLayout.svelte, AuthLayout.svelte
+    Pages/           # Auth, Dashboard, Reservations, Zones, Tables, Users, TimeSlots, Restaurant, Profile
+
+bootstrap/
+  app.php            # Registro de middleware aliases (Spatie roles/permisos)
+```
+
+## Notas de desarrollo
+
+- El frontend usa **Svelte 5 runes** (`$state`, `$derived`, `$props`, `$effect`). No usar `useForm` de InertiaJS — usar `$state` + `router` de `@inertiajs/svelte`.
+- Los modelos usan `uuid` como identificador público en URLs (no `id`).
+- Las flash messages (`success`, `error`, `warning`, `info`) se envían desde el backend y se muestran automáticamente como toasts en `AppLayout`.
+- El sidebar en desktop es colapsable (icono-only mode).
