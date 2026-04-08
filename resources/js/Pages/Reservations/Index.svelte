@@ -1,12 +1,13 @@
 <script>
     import AppLayout from '../../Layouts/AppLayout.svelte'
     import { router } from '@inertiajs/svelte'
+    import { untrack } from 'svelte'
 
     let { reservations, filters } = $props()
 
-    let search = $state(filters.search ?? '')
-    let statusFilter = $state(filters.status ?? '')
-    let dateFilter = $state(filters.date ?? '')
+    let search       = $state(untrack(() => filters.search ?? ''))
+    let statusFilter = $state(untrack(() => filters.status ?? ''))
+    let dateFilter   = $state(untrack(() => filters.date ?? ''))
 
     const statusColors = {
         pending:   'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
@@ -27,7 +28,7 @@
         { value: 'no_show', label: 'No se presentó' },
     ]
 
-    function applyFilters() {
+    const applyFilters = () => {
         router.get('/reservations', {
             search: search || undefined,
             status: statusFilter || undefined,
@@ -35,16 +36,22 @@
         }, { preserveState: true, replace: true })
     }
 
-    function clearFilters() {
+    const clearFilters = () => {
         search = ''
         statusFilter = ''
         dateFilter = ''
         router.get('/reservations')
     }
 
-    function deleteReservation(uuid) {
+    const deleteReservation = (uuid) => {
         if (confirm('¿Estás seguro de eliminar esta reservación?')) {
             router.delete(`/reservations/${uuid}`)
+        }
+    }
+
+    const markNoShow = (uuid, guestName) => {
+        if (confirm(`¿Marcar a "${guestName}" como no-show?`)) {
+            router.patch(`/reservations/${uuid}/mark-no-show`)
         }
     }
 </script>
@@ -69,8 +76,9 @@
     <!-- Filtros -->
     <div class="bg-gray-900 border border-gray-800 rounded-xl p-4 mb-5 flex flex-wrap gap-3 items-end">
         <div class="flex-1 min-w-[200px]">
-            <label class="block text-xs text-gray-500 mb-1">Buscar</label>
+            <label for="filter_search" class="block text-xs text-gray-500 mb-1">Buscar</label>
             <input
+                id="filter_search"
                 type="text"
                 bind:value={search}
                 onkeydown={(e) => e.key === 'Enter' && applyFilters()}
@@ -79,8 +87,9 @@
             />
         </div>
         <div class="min-w-[160px]">
-            <label class="block text-xs text-gray-500 mb-1">Estado</label>
+            <label for="filter_status" class="block text-xs text-gray-500 mb-1">Estado</label>
             <select
+                id="filter_status"
                 bind:value={statusFilter}
                 class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-amber-500"
             >
@@ -90,8 +99,9 @@
             </select>
         </div>
         <div class="min-w-[160px]">
-            <label class="block text-xs text-gray-500 mb-1">Fecha</label>
+            <label for="filter_date" class="block text-xs text-gray-500 mb-1">Fecha</label>
             <input
+                id="filter_date"
                 type="date"
                 bind:value={dateFilter}
                 class="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-amber-500"
@@ -144,7 +154,16 @@
                                     <span class="font-mono text-xs text-amber-400">{r.confirmation_code}</span>
                                 </td>
                                 <td class="px-5 py-3.5">
-                                    <p class="text-white font-medium">{r.guest_name}</p>
+                                    <div class="flex items-center gap-1.5">
+                                        <p class="text-white font-medium">{r.guest_name}</p>
+                                        {#if r.internal_notes}
+                                            <span title={r.internal_notes} class="shrink-0 text-amber-400/70 cursor-default">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                                                </svg>
+                                            </span>
+                                        {/if}
+                                    </div>
                                     {#if r.guest_email}
                                         <p class="text-xs text-gray-500">{r.guest_email}</p>
                                     {/if}
@@ -179,12 +198,22 @@
                                         >
                                             Editar
                                         </a>
-                                        <button
-                                            onclick={() => deleteReservation(r.uuid)}
-                                            class="text-xs text-red-400 hover:text-red-300 transition-colors"
-                                        >
-                                            Eliminar
-                                        </button>
+                                        {#if r.can_mark_no_show}
+                                            <button
+                                                onclick={() => markNoShow(r.uuid, r.guest_name)}
+                                                class="text-xs text-orange-400 hover:text-orange-300 transition-colors"
+                                            >
+                                                No-show
+                                            </button>
+                                        {/if}
+                                        {#if r.can_delete}
+                                            <button
+                                                onclick={() => deleteReservation(r.uuid)}
+                                                class="text-xs text-red-400 hover:text-red-300 transition-colors"
+                                            >
+                                                Eliminar
+                                            </button>
+                                        {/if}
                                     </div>
                                 </td>
                             </tr>

@@ -4,10 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreReservationRequest;
 use App\Http\Requests\UpdateReservationRequest;
+use App\Http\Requests\UpdateReservationStatusRequest;
 use App\Models\Reservation;
 use App\Models\ReservationStatusLog;
 use App\Models\Restaurant;
 use App\Models\Table;
+use App\Services\GoogleCalendarService;
+use App\Services\WhatsAppService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
@@ -47,8 +50,10 @@ class ReservationController extends Controller
                 'status_label'      => $r->status_label,
                 'table_number'      => $r->table?->number,
                 'zone_name'         => $r->table?->zone?->name,
+                'internal_notes'    => $r->internal_notes,
                 'can_edit'          => Auth::user()->can('update', $r),
                 'can_delete'        => Auth::user()->can('delete', $r),
+                'can_mark_no_show'  => in_array($r->status, ['pending', 'confirmed', 'seated']) && Auth::user()->can('update', $r),
             ]);
 
         return Inertia::render('Reservations/Index', [
@@ -160,7 +165,7 @@ class ReservationController extends Controller
         if ($previousStatus !== $validated['status']) {
             ReservationStatusLog::create([
                 'reservation_id'  => $reservation->id,
-                'user_id'         => Auth::id(),
+                'changed_by'      => Auth::id(),
                 'previous_status' => $previousStatus,
                 'new_status'      => $validated['status'],
                 'reason'          => $validated['cancellation_reason'] ?? null,
@@ -168,10 +173,71 @@ class ReservationController extends Controller
                 'user_agent'      => $request->userAgent(),
                 'created_at'      => now(),
             ]);
+
+            // Sync Google Calendar en cambios de estado relevantes
+            $calendar = app(GoogleCalendarService::class);
+            if (in_array($validated['status'], ['confirmed', 'seated', 'completed', 'cancelled', 'no_show'])) {
+                if ($validated['status'] === 'cancelled') {
+                    $calendar->deleteEvent($reservation->fresh());
+                } else {
+                    $calendar->upsertEvent($reservation->fresh());
+                }
+            }
         }
 
         return redirect()->route('reservations.index')
             ->with('success', 'Reservación actualizada exitosamente.');
+    }
+
+    public function updateStatus(UpdateReservationStatusRequest $request, Reservation $reservation)
+    {
+        $previous = $reservation->status;
+        $new      = $request->validated()['status'];
+
+        if ($previous === $new) {
+            return back();
+        }
+
+        $reservation->update(['status' => $new]);
+
+        ReservationStatusLog::create([
+            'reservation_id'  => $reservation->id,
+            'changed_by'      => Auth::id(),
+            'previous_status' => $previous,
+            'new_status'      => $new,
+            'reason'          => 'Cambio rápido de estado desde vista maître.',
+            'ip_address'      => request()->ip(),
+            'user_agent'      => request()->userAgent(),
+            'created_at'      => now(),
+        ]);
+
+        return back()->with('success', 'Estado actualizado.');
+    }
+
+    public function markNoShow(Reservation $reservation)
+    {
+        Gate::authorize('update', $reservation);
+
+        if (! in_array($reservation->status, ['pending', 'confirmed', 'seated'])) {
+            return back()->with('error', 'La reservación no puede marcarse como no-show en su estado actual.');
+        }
+
+        $previousStatus = $reservation->status;
+
+        $reservation->update(['status' => 'no_show']);
+
+        ReservationStatusLog::create([
+            'reservation_id'  => $reservation->id,
+            'changed_by'      => Auth::id(),
+            'previous_status' => $previousStatus,
+            'new_status'      => 'no_show',
+            'reason'          => 'Marcado como no-show desde el listado.',
+            'ip_address'      => request()->ip(),
+            'user_agent'      => request()->userAgent(),
+            'created_at'      => now(),
+        ]);
+
+        return back()->with('success', 'Reservación marcada como no-show.');
     }
 
     public function destroy(Reservation $reservation)

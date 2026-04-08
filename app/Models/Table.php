@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Ramsey\Uuid\Uuid;
 
 class Table extends Model
 {
+    use HasFactory;
+
     protected $table = 'tables';
 
     protected $fillable = [
@@ -19,7 +22,7 @@ class Table extends Model
     ];
 
     protected $casts = [
-        'capacity' => 'integer',
+        'capacity'     => 'integer',
         'min_capacity' => 'integer',
     ];
 
@@ -42,9 +45,6 @@ class Table extends Model
         return $this->hasMany(Reservation::class);
     }
 
-    /**
-     * Las rutas usan UUID en lugar de ID para no exponer identificadores internos.
-     */
     public function getRouteKeyName(): string
     {
         return 'uuid';

@@ -20,13 +20,15 @@ class TimeSlotController extends Controller
         $daysOrder = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
         $slots = TimeSlot::where('restaurant_id', $restaurant->id)
+            ->orderBy('opens_at')
             ->get()
-            ->sortBy(fn($s) => array_search($s->day_of_week, $daysOrder))
+            ->sortBy(fn ($s) => array_search($s->day_of_week, $daysOrder))
             ->values()
-            ->map(fn($s) => [
+            ->map(fn ($s) => [
                 'id'                          => $s->id,
                 'day_of_week'                 => $s->day_of_week,
                 'day_label'                   => $s->day_label,
+                'name'                        => $s->name,
                 'opens_at'                    => substr($s->opens_at, 0, 5),
                 'closes_at'                   => substr($s->closes_at, 0, 5),
                 'slot_duration_minutes'       => $s->slot_duration_minutes,
@@ -55,14 +57,14 @@ class TimeSlotController extends Controller
             'restaurant_id' => $restaurant->id,
         ]));
 
-        return back()->with('success', 'Horario creado exitosamente.');
+        return back()->with('success', 'Turno creado exitosamente.');
     }
 
     public function update(UpdateTimeSlotRequest $request, TimeSlot $timeSlot)
     {
         $timeSlot->update($request->validated());
 
-        return back()->with('success', 'Horario actualizado exitosamente.');
+        return back()->with('success', 'Turno actualizado exitosamente.');
     }
 
     public function destroy(TimeSlot $timeSlot)
@@ -71,6 +73,6 @@ class TimeSlotController extends Controller
 
         $timeSlot->delete();
 
-        return back()->with('success', 'Horario eliminado.');
+        return back()->with('success', 'Turno eliminado.');
     }
 }

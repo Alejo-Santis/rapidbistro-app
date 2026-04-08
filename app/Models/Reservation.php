@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
@@ -9,7 +10,7 @@ use Ramsey\Uuid\Uuid;
 
 class Reservation extends Model
 {
-    use SoftDeletes;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'uuid',
@@ -30,6 +31,7 @@ class Reservation extends Model
         'confirmation_code',
         'cancelled_at',
         'cancellation_reason',
+        'google_event_id',
     ];
 
     protected $casts = [
@@ -43,7 +45,7 @@ class Reservation extends Model
         parent::boot();
 
         static::creating(function ($model) {
-            $model->uuid = $model->uuid ?? Uuid::uuid4()->toString();
+            $model->uuid              = $model->uuid ?? Uuid::uuid4()->toString();
             $model->confirmation_code = $model->confirmation_code ?? strtoupper(Str::random(8));
         });
     }
@@ -73,9 +75,6 @@ class Reservation extends Model
         return $this->hasMany(ReservationStatusLog::class)->orderBy('created_at', 'desc');
     }
 
-    /**
-     * Las rutas usan UUID en lugar de ID para no exponer identificadores internos.
-     */
     public function getRouteKeyName(): string
     {
         return 'uuid';

@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Ramsey\Uuid\Uuid;
 
 class Zone extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'uuid',
         'restaurant_id',
@@ -18,7 +21,7 @@ class Zone extends Model
     ];
 
     protected $casts = [
-        'is_active' => 'boolean',
+        'is_active'  => 'boolean',
         'sort_order' => 'integer',
     ];
 
@@ -41,9 +44,6 @@ class Zone extends Model
         return $this->hasMany(Table::class);
     }
 
-    /**
-     * Las rutas usan UUID en lugar de ID para no exponer identificadores internos.
-     */
     public function getRouteKeyName(): string
     {
         return 'uuid';
@@ -58,7 +58,7 @@ class Zone extends Model
             'bar'     => 'Bar',
             'private' => 'Privado',
             'lounge'  => 'Lounge',
-            default   => ucfirst($this->location),
+            default   => ucfirst($this->location ?? ''),
         };
     }
 }

@@ -2,13 +2,22 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 
 class TimeSlot extends Model
 {
+    use HasUuids;
+
+    public function uniqueIds(): array
+    {
+        return ['uuid'];
+    }
+
     protected $fillable = [
         'restaurant_id',
         'day_of_week',
+        'name',
         'opens_at',
         'closes_at',
         'slot_duration_minutes',

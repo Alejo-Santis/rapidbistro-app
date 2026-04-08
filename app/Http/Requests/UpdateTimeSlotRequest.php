@@ -16,6 +16,7 @@ class UpdateTimeSlotRequest extends FormRequest
     {
         return [
             'day_of_week'                 => ['required', Rule::in(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'])],
+            'name'                        => ['nullable', 'string', 'max:100'],
             'opens_at'                    => ['required', 'date_format:H:i'],
             'closes_at'                   => ['required', 'date_format:H:i', 'after:opens_at'],
             'slot_duration_minutes'       => ['required', 'integer', 'min:15', 'max:480'],

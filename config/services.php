@@ -35,4 +35,15 @@ return [
         ],
     ],
 
+    'whatsapp' => [
+        'token'                => env('WHATSAPP_TOKEN'),
+        'phone_number_id'      => env('WHATSAPP_PHONE_NUMBER_ID'),
+        'default_country_code' => env('WHATSAPP_DEFAULT_COUNTRY_CODE', '57'),
+    ],
+
+    'google_calendar' => [
+        'calendar_id'          => env('GOOGLE_CALENDAR_ID'),
+        'service_account_json' => env('GOOGLE_SERVICE_ACCOUNT_JSON'),
+    ],
+
 ];
