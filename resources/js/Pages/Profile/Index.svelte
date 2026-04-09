@@ -1,5 +1,6 @@
 <script>
     import AppLayout from '../../Layouts/AppLayout.svelte'
+    import PasswordInput from '../../Components/PasswordInput.svelte'
     import { router, page } from '@inertiajs/svelte'
     import { untrack } from 'svelte'
 
@@ -135,29 +136,33 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
                     <div class="sm:col-span-2">
                         <label for="current-password" class="block text-sm text-gray-400 mb-1.5">Contraseña actual *</label>
-                        <input id="current-password" type="password" bind:value={pwForm.current_password} autocomplete="current-password"
-                            placeholder="••••••••"
-                            class="w-full px-3 py-2.5 bg-gray-800 border rounded-lg text-white text-sm focus:outline-none
-                                {pwErrors.current_password ? 'border-red-500' : 'border-gray-700 focus:border-amber-500'}" />
-                        {#if pwErrors.current_password}
-                            <p class="mt-1 text-xs text-red-400">{pwErrors.current_password}</p>
-                        {/if}
+                        <PasswordInput
+                            id="current-password"
+                            bind:value={pwForm.current_password}
+                            autocomplete="current-password"
+                            error={pwErrors.current_password}
+                        />
                     </div>
                     <div>
                         <label for="new-password" class="block text-sm text-gray-400 mb-1.5">Nueva contraseña *</label>
-                        <input id="new-password" type="password" bind:value={pwForm.password} autocomplete="new-password"
+                        <PasswordInput
+                            id="new-password"
+                            bind:value={pwForm.password}
+                            autocomplete="new-password"
                             placeholder="Mínimo 8 caracteres"
-                            class="w-full px-3 py-2.5 bg-gray-800 border rounded-lg text-white text-sm focus:outline-none
-                                {pwErrors.password ? 'border-red-500' : 'border-gray-700 focus:border-amber-500'}" />
-                        {#if pwErrors.password}
-                            <p class="mt-1 text-xs text-red-400">{pwErrors.password}</p>
-                        {/if}
+                            showStrength={true}
+                            confirmValue={pwForm.password_confirmation}
+                            error={pwErrors.password}
+                        />
                     </div>
                     <div>
                         <label for="password-confirmation" class="block text-sm text-gray-400 mb-1.5">Confirmar contraseña *</label>
-                        <input id="password-confirmation" type="password" bind:value={pwForm.password_confirmation} autocomplete="new-password"
+                        <PasswordInput
+                            id="password-confirmation"
+                            bind:value={pwForm.password_confirmation}
+                            autocomplete="new-password"
                             placeholder="Repetí la contraseña"
-                            class="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-amber-500" />
+                        />
                     </div>
                 </div>
 

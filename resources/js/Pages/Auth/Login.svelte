@@ -1,8 +1,7 @@
 <script>
     import AuthLayout from '../../Layouts/AuthLayout.svelte'
-    import { router } from '@inertiajs/svelte'
-
-    import { page } from '@inertiajs/svelte'
+    import PasswordInput from '../../Components/PasswordInput.svelte'
+    import { router, page } from '@inertiajs/svelte'
 
     let email = $state('')
     let password = $state('')
@@ -61,19 +60,12 @@
                 <label for="password" class="block text-sm font-medium text-gray-300 mb-1.5">
                     Contraseña
                 </label>
-                <input
+                <PasswordInput
                     id="password"
-                    type="password"
                     bind:value={password}
                     autocomplete="current-password"
-                    class="w-full px-3.5 py-2.5 bg-gray-800 border rounded-lg text-white placeholder-gray-500 text-sm transition-colors
-                        {errors.password ? 'border-red-500 focus:border-red-500' : 'border-gray-700 focus:border-amber-500'}
-                        focus:outline-none focus:ring-0"
-                    placeholder="••••••••"
+                    error={errors.password}
                 />
-                {#if errors.password}
-                    <p class="mt-1.5 text-xs text-red-400">{errors.password}</p>
-                {/if}
             </div>
 
             <!-- Recordarme + Olvidé contraseña -->

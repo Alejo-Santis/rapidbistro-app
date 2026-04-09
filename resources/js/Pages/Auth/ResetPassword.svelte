@@ -1,11 +1,13 @@
 <script>
     import { router } from '@inertiajs/svelte'
+    import { untrack } from 'svelte'
+    import PasswordInput from '../../Components/PasswordInput.svelte'
 
     let { token, email: initialEmail } = $props()
 
     let form = $state({
-        token,
-        email:                 initialEmail ?? '',
+        token:                 untrack(() => token),
+        email:                 untrack(() => initialEmail ?? ''),
         password:              '',
         password_confirmation: '',
     })
@@ -50,30 +52,25 @@
             </div>
 
             <div>
-                <label for="password" class="block text-sm text-gray-400 mb-1.5">Nueva contraseña</label>
-                <input
-                    id="password"
-                    type="password"
+                <label for="reset-password" class="block text-sm text-gray-400 mb-1.5">Nueva contraseña</label>
+                <PasswordInput
+                    id="reset-password"
                     bind:value={form.password}
                     autocomplete="new-password"
                     placeholder="Mínimo 8 caracteres"
-                    class="w-full px-3 py-2.5 bg-gray-800 border rounded-lg text-white text-sm focus:outline-none
-                        {errors.password ? 'border-red-500' : 'border-gray-700 focus:border-amber-500'}"
+                    showStrength={true}
+                    confirmValue={form.password_confirmation}
+                    error={errors.password}
                 />
-                {#if errors.password}
-                    <p class="mt-1 text-xs text-red-400">{errors.password}</p>
-                {/if}
             </div>
 
             <div>
-                <label for="password_confirmation" class="block text-sm text-gray-400 mb-1.5">Confirmar contraseña</label>
-                <input
-                    id="password_confirmation"
-                    type="password"
+                <label for="reset-password-confirm" class="block text-sm text-gray-400 mb-1.5">Confirmar contraseña</label>
+                <PasswordInput
+                    id="reset-password-confirm"
                     bind:value={form.password_confirmation}
                     autocomplete="new-password"
                     placeholder="Repetí la contraseña"
-                    class="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-amber-500"
                 />
             </div>
 
