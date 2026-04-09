@@ -1,5 +1,6 @@
 <script>
     import AppLayout from '../../Layouts/AppLayout.svelte'
+    import Pagination from '../../Components/Pagination.svelte'
     import { router } from '@inertiajs/svelte'
     import { untrack } from 'svelte'
 
@@ -241,30 +242,9 @@
             </div>
 
             <!-- Paginación -->
-            {#if waitlist.meta?.last_page > 1}
-                <div class="flex items-center justify-between px-5 py-4 border-t border-gray-800">
-                    <p class="text-xs text-gray-500">
-                        Mostrando {waitlist.meta.from}–{waitlist.meta.to} de {waitlist.meta.total}
-                    </p>
-                    <div class="flex gap-1">
-                        {#each waitlist.meta.links as link}
-                            {#if link.url}
-                                <a
-                                    href={link.url}
-                                    class="px-3 py-1.5 text-xs rounded-lg transition-colors
-                                        {link.active
-                                            ? 'bg-amber-500 text-gray-900 font-semibold'
-                                            : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}"
-                                >
-                                    {@html link.label}
-                                </a>
-                            {:else}
-                                <span class="px-3 py-1.5 text-xs text-gray-600">{@html link.label}</span>
-                            {/if}
-                        {/each}
-                    </div>
-                </div>
-            {/if}
+            <div class="px-5">
+                <Pagination meta={waitlist.meta} only={['waitlist']} />
+            </div>
         {/if}
     </div>
 

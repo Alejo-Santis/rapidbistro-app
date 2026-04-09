@@ -1,5 +1,6 @@
 <script>
     import AppLayout from '../../Layouts/AppLayout.svelte'
+    import Pagination from '../../Components/Pagination.svelte'
     import { router, page } from '@inertiajs/svelte'
 
     let { users, roles } = $props()
@@ -179,22 +180,9 @@
             </div>
 
             <!-- Paginación -->
-            {#if users.meta?.last_page > 1}
-                <div class="flex items-center justify-between px-5 py-4 border-t border-gray-800">
-                    <p class="text-xs text-gray-500">
-                        Mostrando {users.meta.from}–{users.meta.to} de {users.meta.total}
-                    </p>
-                    <div class="flex gap-1">
-                        {#each users.meta.links as link}
-                            {#if link.url}
-                                <a href={link.url} class="px-3 py-1.5 text-xs rounded-lg transition-colors {link.active ? 'bg-amber-500 text-gray-900 font-semibold' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}">
-                                    {@html link.label}
-                                </a>
-                            {/if}
-                        {/each}
-                    </div>
-                </div>
-            {/if}
+            <div class="px-5">
+                <Pagination meta={users.meta} only={['users']} />
+            </div>
         {/if}
     </div>
 </AppLayout>
@@ -207,7 +195,7 @@
         <div class="relative bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-md shadow-2xl">
             <div class="flex items-center justify-between px-6 py-4 border-b border-gray-800">
                 <h2 class="font-semibold text-white">{editingUser ? 'Editar usuario' : 'Nuevo usuario'}</h2>
-                <button onclick={closeModal} class="text-gray-500 hover:text-white transition-colors">
+                <button onclick={closeModal} aria-label="Cerrar modal" class="text-gray-500 hover:text-white transition-colors">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
@@ -216,8 +204,9 @@
 
             <form onsubmit={submit} class="p-6 space-y-4">
                 <div>
-                    <label class="block text-sm text-gray-400 mb-1.5">Nombre *</label>
+                    <label for="u-name" class="block text-sm text-gray-400 mb-1.5">Nombre *</label>
                     <input
+                        id="u-name"
                         type="text"
                         bind:value={form.name}
                         class="w-full px-3 py-2.5 bg-gray-800 border rounded-lg text-white text-sm focus:outline-none
@@ -230,8 +219,9 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm text-gray-400 mb-1.5">Email *</label>
+                    <label for="u-email" class="block text-sm text-gray-400 mb-1.5">Email *</label>
                     <input
+                        id="u-email"
                         type="email"
                         bind:value={form.email}
                         class="w-full px-3 py-2.5 bg-gray-800 border rounded-lg text-white text-sm focus:outline-none
@@ -245,8 +235,9 @@
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm text-gray-400 mb-1.5">Teléfono</label>
+                        <label for="u-phone" class="block text-sm text-gray-400 mb-1.5">Teléfono</label>
                         <input
+                            id="u-phone"
                             type="tel"
                             bind:value={form.phone}
                             class="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-amber-500"
@@ -254,8 +245,9 @@
                         />
                     </div>
                     <div>
-                        <label class="block text-sm text-gray-400 mb-1.5">Rol *</label>
+                        <label for="u-role" class="block text-sm text-gray-400 mb-1.5">Rol *</label>
                         <select
+                            id="u-role"
                             bind:value={form.role}
                             class="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-amber-500"
                         >
@@ -270,10 +262,11 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm text-gray-400 mb-1.5">
+                    <label for="u-password" class="block text-sm text-gray-400 mb-1.5">
                         Contraseña {editingUser ? '(dejar vacío para no cambiar)' : '*'}
                     </label>
                     <input
+                        id="u-password"
                         type="password"
                         bind:value={form.password}
                         class="w-full px-3 py-2.5 bg-gray-800 border rounded-lg text-white text-sm focus:outline-none

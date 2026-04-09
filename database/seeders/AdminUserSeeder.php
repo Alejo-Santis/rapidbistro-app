@@ -10,34 +10,51 @@ class AdminUserSeeder extends Seeder
 {
     public function run(): void
     {
-        $admin = User::firstOrCreate(
-            ['email' => 'admin@rapidbistro.com'],
+        $users = [
             [
-                'name'     => 'Administrador',
-                'phone'    => '+1-555-0001',
-                'password' => Hash::make('password'),
-            ]
-        );
-        $admin->syncRoles(['super-admin']);
+                'name'  => 'Super Administrador',
+                'email' => 'superadmin@rapidbistro.com',
+                'phone' => '+58 414 555 0001',
+                'role'  => 'super-admin',
+            ],
+            [
+                'name'  => 'Ana García (Admin)',
+                'email' => 'admin@rapidbistro.com',
+                'phone' => '+58 414 555 0002',
+                'role'  => 'admin',
+            ],
+            [
+                'name'  => 'Carlos López (Recepción)',
+                'email' => 'recepcion@rapidbistro.com',
+                'phone' => '+58 414 555 0003',
+                'role'  => 'receptionist',
+            ],
+            [
+                'name'  => 'María Torres (Maître)',
+                'email' => 'maitre@rapidbistro.com',
+                'phone' => '+58 414 555 0004',
+                'role'  => 'maitre',
+            ],
+            [
+                'name'  => 'Luis Pérez (Staff)',
+                'email' => 'staff@rapidbistro.com',
+                'phone' => '+58 414 555 0005',
+                'role'  => 'staff',
+            ],
+        ];
 
-        $receptionist = User::firstOrCreate(
-            ['email' => 'recepcion@rapidbistro.com'],
-            [
-                'name'     => 'Recepcionista',
-                'phone'    => '+1-555-0002',
-                'password' => Hash::make('password'),
-            ]
-        );
-        $receptionist->syncRoles(['receptionist']);
+        foreach ($users as $data) {
+            $user = User::firstOrCreate(
+                ['email' => $data['email']],
+                [
+                    'name'     => $data['name'],
+                    'phone'    => $data['phone'],
+                    'password' => Hash::make('password'),
+                ]
+            );
+            $user->syncRoles([$data['role']]);
+        }
 
-        $staff = User::firstOrCreate(
-            ['email' => 'staff@rapidbistro.com'],
-            [
-                'name'     => 'Personal',
-                'phone'    => '+1-555-0003',
-                'password' => Hash::make('password'),
-            ]
-        );
-        $staff->syncRoles(['staff']);
+        $this->command->info('✓ Usuarios creados. Contraseña de todos: password');
     }
 }

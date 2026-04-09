@@ -1,26 +1,46 @@
 <script>
     import AppLayout from '../../Layouts/AppLayout.svelte'
-    import { router } from '@inertiajs/svelte'
+    import { router, page } from '@inertiajs/svelte'
+    import { untrack } from 'svelte'
 
     let { user } = $props()
 
-    let form = $state({
-        name: user.name ?? '',
-        email: user.email ?? '',
-        phone: user.phone ?? '',
-        password: '',
+    // Flash del servidor
+    const flash = $derived($page.props.flash ?? {})
+
+    // ── Formulario de perfil ──────────────────────────────────────────────
+    let profileForm = $state({
+        name:  untrack(() => user.name  ?? ''),
+        email: untrack(() => user.email ?? ''),
+        phone: untrack(() => user.phone ?? ''),
+    })
+    let profileErrors     = $state({})
+    let profileProcessing = $state(false)
+
+    function submitProfile(e) {
+        e.preventDefault()
+        profileProcessing = true
+        router.put('/profile', { ...profileForm }, {
+            onError:  (errs) => { profileErrors = errs },
+            onFinish: () => { profileProcessing = false },
+        })
+    }
+
+    // ── Formulario de contraseña ──────────────────────────────────────────
+    let pwForm = $state({
+        current_password:      '',
+        password:              '',
         password_confirmation: '',
     })
+    let pwErrors     = $state({})
+    let pwProcessing = $state(false)
 
-    let errors = $state({})
-    let processing = $state(false)
-
-    function submit(e) {
+    function submitPassword(e) {
         e.preventDefault()
-        processing = true
-        router.put('/profile', { ...form }, {
-            onError: (errs) => { errors = errs },
-            onFinish: () => { processing = false },
+        pwProcessing = true
+        router.put('/profile/password', { ...pwForm }, {
+            onError:  (errs) => { pwErrors = errs },
+            onFinish: () => { pwProcessing = false },
         })
     }
 
@@ -35,10 +55,11 @@
 </script>
 
 <AppLayout title="Mi perfil">
-    <div class="max-w-3xl">
+    <div class="max-w-3xl space-y-6">
+
         <!-- Header -->
-        <div class="mb-8 flex items-center gap-5">
-            <div class="w-16 h-16 rounded-2xl bg-amber-500 flex items-center justify-center text-gray-900 font-bold text-2xl flex-shrink-0">
+        <div class="flex items-center gap-5">
+            <div class="w-16 h-16 rounded-2xl bg-amber-500 flex items-center justify-center text-gray-900 font-bold text-2xl shrink-0">
                 {getInitials(user.name)}
             </div>
             <div>
@@ -47,9 +68,18 @@
             </div>
         </div>
 
-        <form onsubmit={submit} class="space-y-5">
+        <!-- Flash success -->
+        {#if flash.success}
+            <div class="flex items-center gap-3 bg-green-500/10 border border-green-500/20 rounded-xl px-4 py-3">
+                <svg class="w-4 h-4 text-green-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                <p class="text-green-300 text-sm">{flash.success}</p>
+            </div>
+        {/if}
 
-            <!-- Información personal -->
+        <!-- ── Información personal ── -->
+        <form onsubmit={submitProfile}>
             <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
                 <h2 class="font-semibold text-white mb-5 flex items-center gap-2">
                     <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -57,46 +87,42 @@
                     </svg>
                     Información personal
                 </h2>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
                     <div class="sm:col-span-2">
-                        <label class="block text-sm text-gray-400 mb-1.5">Nombre completo *</label>
-                        <input
-                            type="text"
-                            bind:value={form.name}
+                        <label for="profile-name" class="block text-sm text-gray-400 mb-1.5">Nombre completo *</label>
+                        <input id="profile-name" type="text" bind:value={profileForm.name}
                             class="w-full px-3 py-2.5 bg-gray-800 border rounded-lg text-white text-sm focus:outline-none
-                                {errors.name ? 'border-red-500' : 'border-gray-700 focus:border-amber-500'}"
-                            placeholder="Tu nombre completo"
-                        />
-                        {#if errors.name}
-                            <p class="mt-1 text-xs text-red-400">{errors.name}</p>
+                                {profileErrors.name ? 'border-red-500' : 'border-gray-700 focus:border-amber-500'}" />
+                        {#if profileErrors.name}
+                            <p class="mt-1 text-xs text-red-400">{profileErrors.name}</p>
                         {/if}
                     </div>
                     <div>
-                        <label class="block text-sm text-gray-400 mb-1.5">Correo electrónico *</label>
-                        <input
-                            type="email"
-                            bind:value={form.email}
+                        <label for="profile-email" class="block text-sm text-gray-400 mb-1.5">Correo electrónico *</label>
+                        <input id="profile-email" type="email" bind:value={profileForm.email}
                             class="w-full px-3 py-2.5 bg-gray-800 border rounded-lg text-white text-sm focus:outline-none
-                                {errors.email ? 'border-red-500' : 'border-gray-700 focus:border-amber-500'}"
-                            placeholder="correo@ejemplo.com"
-                        />
-                        {#if errors.email}
-                            <p class="mt-1 text-xs text-red-400">{errors.email}</p>
+                                {profileErrors.email ? 'border-red-500' : 'border-gray-700 focus:border-amber-500'}" />
+                        {#if profileErrors.email}
+                            <p class="mt-1 text-xs text-red-400">{profileErrors.email}</p>
                         {/if}
                     </div>
                     <div>
-                        <label class="block text-sm text-gray-400 mb-1.5">Teléfono</label>
-                        <input
-                            type="tel"
-                            bind:value={form.phone}
-                            class="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-amber-500"
-                            placeholder="+1 555 0100"
-                        />
+                        <label for="profile-phone" class="block text-sm text-gray-400 mb-1.5">Teléfono</label>
+                        <input id="profile-phone" type="tel" bind:value={profileForm.phone}
+                            class="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-amber-500" />
                     </div>
                 </div>
+                <div class="flex justify-end">
+                    <button type="submit" disabled={profileProcessing}
+                        class="px-6 py-2.5 bg-amber-500 hover:bg-amber-400 disabled:opacity-60 text-gray-900 font-semibold rounded-lg text-sm transition-colors">
+                        {profileProcessing ? 'Guardando...' : 'Guardar cambios'}
+                    </button>
+                </div>
             </div>
+        </form>
 
-            <!-- Cambiar contraseña -->
+        <!-- ── Cambio de contraseña ── -->
+        <form onsubmit={submitPassword}>
             <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
                 <h2 class="font-semibold text-white mb-1 flex items-center gap-2">
                     <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -104,51 +130,45 @@
                     </svg>
                     Cambiar contraseña
                 </h2>
-                <p class="text-xs text-gray-500 mb-5">Déjalo en blanco si no deseas cambiarla</p>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm text-gray-400 mb-1.5">Nueva contraseña</label>
-                        <input
-                            type="password"
-                            bind:value={form.password}
-                            class="w-full px-3 py-2.5 bg-gray-800 border rounded-lg text-white text-sm focus:outline-none
-                                {errors.password ? 'border-red-500' : 'border-gray-700 focus:border-amber-500'}"
+                <p class="text-xs text-gray-500 mb-5">Al cambiar tu contraseña se cerrará la sesión automáticamente por seguridad.</p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+                    <div class="sm:col-span-2">
+                        <label for="current-password" class="block text-sm text-gray-400 mb-1.5">Contraseña actual *</label>
+                        <input id="current-password" type="password" bind:value={pwForm.current_password} autocomplete="current-password"
                             placeholder="••••••••"
-                            autocomplete="new-password"
-                        />
-                        {#if errors.password}
-                            <p class="mt-1 text-xs text-red-400">{errors.password}</p>
+                            class="w-full px-3 py-2.5 bg-gray-800 border rounded-lg text-white text-sm focus:outline-none
+                                {pwErrors.current_password ? 'border-red-500' : 'border-gray-700 focus:border-amber-500'}" />
+                        {#if pwErrors.current_password}
+                            <p class="mt-1 text-xs text-red-400">{pwErrors.current_password}</p>
                         {/if}
                     </div>
                     <div>
-                        <label class="block text-sm text-gray-400 mb-1.5">Confirmar contraseña</label>
-                        <input
-                            type="password"
-                            bind:value={form.password_confirmation}
-                            class="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-amber-500"
-                            placeholder="••••••••"
-                            autocomplete="new-password"
-                        />
+                        <label for="new-password" class="block text-sm text-gray-400 mb-1.5">Nueva contraseña *</label>
+                        <input id="new-password" type="password" bind:value={pwForm.password} autocomplete="new-password"
+                            placeholder="Mínimo 8 caracteres"
+                            class="w-full px-3 py-2.5 bg-gray-800 border rounded-lg text-white text-sm focus:outline-none
+                                {pwErrors.password ? 'border-red-500' : 'border-gray-700 focus:border-amber-500'}" />
+                        {#if pwErrors.password}
+                            <p class="mt-1 text-xs text-red-400">{pwErrors.password}</p>
+                        {/if}
+                    </div>
+                    <div>
+                        <label for="password-confirmation" class="block text-sm text-gray-400 mb-1.5">Confirmar contraseña *</label>
+                        <input id="password-confirmation" type="password" bind:value={pwForm.password_confirmation} autocomplete="new-password"
+                            placeholder="Repetí la contraseña"
+                            class="w-full px-3 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-amber-500" />
                     </div>
                 </div>
-            </div>
 
-            <!-- Acciones -->
-            <div class="flex items-center justify-between">
-                <a
-                    href="/dashboard"
-                    class="px-4 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm transition-colors"
-                >
-                    Volver
-                </a>
-                <button
-                    type="submit"
-                    disabled={processing}
-                    class="px-6 py-2.5 bg-amber-500 hover:bg-amber-400 disabled:bg-amber-500/50 text-gray-900 font-semibold rounded-lg text-sm transition-colors"
-                >
-                    {processing ? 'Guardando...' : 'Guardar cambios'}
-                </button>
+                <div class="flex justify-end">
+                    <button type="submit" disabled={pwProcessing}
+                        class="px-6 py-2.5 bg-red-600 hover:bg-red-500 disabled:opacity-60 text-white font-semibold rounded-lg text-sm transition-colors">
+                        {pwProcessing ? 'Actualizando...' : 'Actualizar contraseña'}
+                    </button>
+                </div>
             </div>
         </form>
+
     </div>
 </AppLayout>

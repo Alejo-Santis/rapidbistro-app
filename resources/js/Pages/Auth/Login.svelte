@@ -2,11 +2,15 @@
     import AuthLayout from '../../Layouts/AuthLayout.svelte'
     import { router } from '@inertiajs/svelte'
 
+    import { page } from '@inertiajs/svelte'
+
     let email = $state('')
     let password = $state('')
     let remember = $state(false)
     let errors = $state({})
     let processing = $state(false)
+
+    const status = $derived($page.props.flash?.status ?? null)
 
     function submit(e) {
         e.preventDefault()
@@ -19,6 +23,15 @@
 </script>
 
 <AuthLayout>
+    {#if status}
+        <div class="mb-4 flex items-start gap-3 bg-green-500/10 border border-green-500/20 rounded-xl px-4 py-3">
+            <svg class="w-4 h-4 text-green-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            <p class="text-green-300 text-sm">{status}</p>
+        </div>
+    {/if}
+
     <div class="bg-gray-900 rounded-2xl border border-gray-800 p-8 shadow-xl">
         <h2 class="text-xl font-semibold text-white mb-6">Iniciar sesión</h2>
 
@@ -63,15 +76,20 @@
                 {/if}
             </div>
 
-            <!-- Recordarme -->
-            <div class="flex items-center gap-2">
-                <input
-                    id="remember"
-                    type="checkbox"
-                    bind:checked={remember}
-                    class="w-4 h-4 rounded border-gray-600 bg-gray-800 text-amber-500 focus:ring-amber-500 focus:ring-offset-gray-900"
-                />
-                <label for="remember" class="text-sm text-gray-400">Recordarme</label>
+            <!-- Recordarme + Olvidé contraseña -->
+            <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                    <input
+                        id="remember"
+                        type="checkbox"
+                        bind:checked={remember}
+                        class="w-4 h-4 rounded border-gray-600 bg-gray-800 text-amber-500 focus:ring-amber-500 focus:ring-offset-gray-900"
+                    />
+                    <label for="remember" class="text-sm text-gray-400">Recordarme</label>
+                </div>
+                <a href="/forgot-password" class="text-xs text-amber-400 hover:underline">
+                    ¿Olvidaste tu contraseña?
+                </a>
             </div>
 
             <!-- Submit -->

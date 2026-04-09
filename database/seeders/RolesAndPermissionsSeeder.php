@@ -67,6 +67,11 @@ class RolesAndPermissionsSeeder extends Seeder
                 'tables.view',
                 'zones.view',
             ],
+
+            'maitre' => [
+                'reservations.view', 'reservations.update', 'reservations.cancel',
+                'tables.view', 'zones.view',
+            ],
         ];
 
         foreach ($roles as $roleName => $rolePermissions) {

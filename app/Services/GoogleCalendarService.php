@@ -13,8 +13,8 @@ class GoogleCalendarService
 
     public function __construct()
     {
-        $this->calendarId         = config('services.google_calendar.calendar_id', '');
-        $this->serviceAccountJson = config('services.google_calendar.service_account_json', '');
+        $this->calendarId         = config('services.google_calendar.calendar_id') ?? '';
+        $this->serviceAccountJson = config('services.google_calendar.service_account_json') ?? '';
     }
 
     public function isConfigured(): bool

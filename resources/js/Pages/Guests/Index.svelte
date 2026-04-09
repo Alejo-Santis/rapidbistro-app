@@ -1,5 +1,6 @@
 <script>
     import AppLayout from '../../Layouts/AppLayout.svelte'
+    import Pagination from '../../Components/Pagination.svelte'
     import { router } from '@inertiajs/svelte'
     import { untrack } from 'svelte'
 
@@ -155,19 +156,7 @@
         </div>
 
         <!-- Paginación -->
-        {#if guests.meta?.last_page > 1}
-            <div class="flex justify-center gap-1 mt-6">
-                {#each guests.meta.links as link}
-                    {#if link.url}
-                        <a href={link.url} class="px-3 py-1.5 text-xs rounded-lg {link.active ? 'bg-amber-500 text-gray-900 font-semibold' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}">
-                            {@html link.label}
-                        </a>
-                    {:else}
-                        <span class="px-3 py-1.5 text-xs text-gray-600">{@html link.label}</span>
-                    {/if}
-                {/each}
-            </div>
-        {/if}
+        <Pagination meta={guests.meta} only={['guests']} />
     {/if}
 
 </AppLayout>

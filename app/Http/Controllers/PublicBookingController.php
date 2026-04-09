@@ -11,6 +11,7 @@ use App\Models\Table;
 use App\Models\TimeSlot;
 use App\Models\Waitlist;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -125,39 +126,50 @@ class PublicBookingController extends Controller
         $endMins  = ((int)$h * 60 + (int)$m) + $duration;
         $endsAt   = sprintf('%02d:%02d', intdiv($endMins, 60), $endMins % 60);
 
-        // Buscar la mesa más pequeña disponible
-        $reserved = Reservation::whereDate('reservation_date', $validated['reservation_date'])
-            ->whereNotIn('status', ['cancelled', 'no_show'])
-            ->where(fn ($q) => $q
-                ->where('starts_at', '<', $endsAt . ':00')
-                ->where('ends_at', '>', $validated['starts_at'] . ':00')
-            )
-            ->pluck('table_id');
+        // ── Transacción con lock para evitar double-booking ──────────────
+        $reservation = DB::transaction(function () use ($validated, $restaurant, $endsAt) {
 
-        $table = Table::whereHas('zone', fn ($q) => $q->where('is_active', true))
-            ->where('capacity', '>=', $validated['party_size'])
-            ->whereNotIn('id', $reserved)
-            ->whereNotIn('status', ['maintenance', 'unavailable'])
-            ->orderBy('capacity')
-            ->first();
+            // Obtener tablas con lock para que otras transacciones concurrentes
+            // esperen antes de leer disponibilidad
+            $reserved = Reservation::whereDate('reservation_date', $validated['reservation_date'])
+                ->whereNotIn('status', ['cancelled', 'no_show'])
+                ->where(fn ($q) => $q
+                    ->where('starts_at', '<', $endsAt . ':00')
+                    ->where('ends_at', '>', $validated['starts_at'] . ':00')
+                )
+                ->lockForUpdate()
+                ->pluck('table_id');
 
-        if (! $table) {
+            $table = Table::whereHas('zone', fn ($q) => $q->where('is_active', true))
+                ->where('capacity', '>=', $validated['party_size'])
+                ->whereNotIn('id', $reserved)
+                ->whereNotIn('status', ['maintenance', 'unavailable'])
+                ->orderBy('capacity')
+                ->lockForUpdate()
+                ->first();
+
+            if (! $table) {
+                return null;
+            }
+
+            return Reservation::create([
+                'restaurant_id'    => $restaurant->id,
+                'table_id'         => $table->id,
+                'reservation_date' => $validated['reservation_date'],
+                'starts_at'        => $validated['starts_at'],
+                'ends_at'          => $endsAt,
+                'party_size'       => $validated['party_size'],
+                'guest_name'       => $validated['guest_name'],
+                'guest_email'      => $validated['guest_email'],
+                'guest_phone'      => $validated['guest_phone'] ?? null,
+                'notes'            => $validated['notes'] ?? null,
+                'status'           => 'confirmed',
+            ]);
+        });
+
+        if (! $reservation) {
             return back()->withErrors(['starts_at' => 'Lo sentimos, ya no hay mesas disponibles para ese horario.']);
         }
-
-        $reservation = Reservation::create([
-            'restaurant_id'     => $restaurant->id,
-            'table_id'          => $table->id,
-            'reservation_date'  => $validated['reservation_date'],
-            'starts_at'         => $validated['starts_at'],
-            'ends_at'           => $endsAt,
-            'party_size'        => $validated['party_size'],
-            'guest_name'        => $validated['guest_name'],
-            'guest_email'       => $validated['guest_email'],
-            'guest_phone'       => $validated['guest_phone'] ?? null,
-            'notes'             => $validated['notes'] ?? null,
-            'status'            => 'confirmed',
-        ]);
 
         $reservation->load(['restaurant', 'table.zone']);
 
