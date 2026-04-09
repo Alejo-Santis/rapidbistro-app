@@ -1,5 +1,5 @@
 <?php
 
-test('the application redirects unauthenticated users to login', function () {
-    $this->get('/')->assertRedirect('/login');
+test('the landing page is public and does not redirect to login', function () {
+    $this->get('/')->assertStatus(200);
 });

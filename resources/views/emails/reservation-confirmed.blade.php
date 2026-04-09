@@ -77,6 +77,15 @@
                 </div>
                 @endif
 
+                @if($reservation->cancellation_token)
+                <div style="text-align:center;margin:0 0 24px;">
+                    <a href="{{ url('/reservar/cancelar/' . $reservation->cancellation_token) }}"
+                       style="display:inline-block;padding:12px 24px;background:#1e293b;border:1px solid #334155;border-radius:10px;color:#94a3b8;font-size:13px;text-decoration:none;">
+                        Cancelar esta reservación
+                    </a>
+                </div>
+                @endif
+
                 <p style="color:#64748b;font-size:13px;margin:0">
                     Si tienes alguna pregunta, contáctanos a
                     <a href="mailto:{{ $reservation->restaurant->email }}" style="color:#f59e0b">{{ $reservation->restaurant->email }}</a>

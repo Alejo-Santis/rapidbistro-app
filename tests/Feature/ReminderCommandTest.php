@@ -6,12 +6,15 @@ use App\Models\Reservation;
 use App\Models\Restaurant;
 use App\Models\Table;
 use App\Models\Zone;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Facades\Mail;
 
-uses(RefreshDatabase::class);
+// DatabaseMigrations runs migrate:fresh (committed data) so artisan can see it across connections
+uses(DatabaseMigrations::class);
 
 test('reminder command runs without errors', function () {
+    $this->seed(\Database\Seeders\RolesAndPermissionsSeeder::class);
+
     $this->artisan('reservations:send-reminders')
         ->assertExitCode(0);
 });
@@ -37,7 +40,7 @@ test('reminder command sends 24h email for reservations tomorrow at current hour
 
     $this->artisan('reservations:send-reminders')->assertExitCode(0);
 
-    Mail::assertSent(ReservationReminderMail::class, fn ($mail) =>
+    Mail::assertQueued(ReservationReminderMail::class, fn ($mail) =>
         $mail->hasTo('test24h@example.com')
     );
 });
@@ -63,7 +66,7 @@ test('reminder command sends 2h email for reservations today in 2 hours', functi
 
     $this->artisan('reservations:send-reminders')->assertExitCode(0);
 
-    Mail::assertSent(ReservationReminderMail::class, fn ($mail) =>
+    Mail::assertQueued(ReservationReminderMail::class, fn ($mail) =>
         $mail->hasTo('test2h@example.com')
     );
 });

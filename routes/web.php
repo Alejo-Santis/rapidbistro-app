@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\LandingController;
 use App\Http\Controllers\MaitreController;
 use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\DashboardController;
@@ -20,14 +21,20 @@ use App\Http\Controllers\WalkInController;
 use App\Http\Controllers\ZoneController;
 use Illuminate\Support\Facades\Route;
 
+// ── Landing page pública ─────────────────────────────────────────────────────
+Route::get('/', [LandingController::class, 'index'])->name('home');
+
 // ── Portal público de reservas (sin auth) ───────────────────────────────────
 Route::prefix('reservar')->name('booking.')->group(function () {
     Route::get('/',                         [PublicBookingController::class, 'index'])->name('index');
     Route::get('/disponibilidad',           [PublicBookingController::class, 'availability'])->name('availability');
-    Route::post('/',                        [PublicBookingController::class, 'store'])->name('store');
+    Route::post('/',                        [PublicBookingController::class, 'store'])->name('store')->middleware('throttle:10,1');
     Route::get('/confirmacion/{code}',      [PublicBookingController::class, 'confirmation'])->name('confirmation');
+    Route::get('/cancelar/{token}',         [PublicBookingController::class, 'cancelForm'])->name('cancel');
+    Route::post('/cancelar/{token}',        [PublicBookingController::class, 'cancelReservation'])->name('cancel.confirm')->middleware('throttle:5,1');
+    Route::get('/cancelado/{code}',         [PublicBookingController::class, 'cancelDone'])->name('cancel.done');
     Route::get('/lista-espera',             [PublicBookingController::class, 'waitlistForm'])->name('waitlist');
-    Route::post('/lista-espera',            [PublicBookingController::class, 'storeWaitlist'])->name('waitlist.store');
+    Route::post('/lista-espera',            [PublicBookingController::class, 'storeWaitlist'])->name('waitlist.store')->middleware('throttle:10,1');
     Route::get('/lista-espera/gracias',     [PublicBookingController::class, 'waitlistSuccess'])->name('waitlist.success');
 });
 
@@ -44,7 +51,7 @@ Route::post('/logout', [LoginController::class, 'destroy'])
 // ── Rutas protegidas ─────────────────────────────────────────────────────────
 Route::middleware('auth')->group(function () {
 
-    Route::get('/', fn () => redirect()->route('dashboard'));
+    Route::get('/home', fn () => redirect()->route('dashboard'));
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 

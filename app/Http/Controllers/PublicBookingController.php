@@ -196,6 +196,68 @@ class PublicBookingController extends Controller
         ]);
     }
 
+    public function cancelForm(string $token)
+    {
+        $reservation = Reservation::where('cancellation_token', $token)
+            ->with(['restaurant', 'table.zone'])
+            ->firstOrFail();
+
+        $canCancel = ! in_array($reservation->status, ['cancelled', 'completed', 'seated', 'no_show']);
+
+        return Inertia::render('Booking/Cancel', [
+            'reservation' => [
+                'confirmation_code' => $reservation->confirmation_code,
+                'guest_name'        => $reservation->guest_name,
+                'reservation_date'  => $reservation->reservation_date->format('d \d\e F \d\e Y'),
+                'starts_at'         => substr($reservation->starts_at, 0, 5),
+                'ends_at'           => substr($reservation->ends_at, 0, 5),
+                'party_size'        => $reservation->party_size,
+                'status'            => $reservation->status,
+            ],
+            'restaurant' => [
+                'name'  => $reservation->restaurant->name,
+                'email' => $reservation->restaurant->email,
+                'phone' => $reservation->restaurant->phone,
+            ],
+            'canCancel' => $canCancel,
+            'token'     => $token,
+        ]);
+    }
+
+    public function cancelReservation(string $token)
+    {
+        $reservation = Reservation::where('cancellation_token', $token)->firstOrFail();
+
+        if (in_array($reservation->status, ['cancelled', 'completed', 'seated', 'no_show'])) {
+            return back()->with('error', 'Esta reservación no puede cancelarse en su estado actual.');
+        }
+
+        $reservation->update([
+            'status'       => 'cancelled',
+            'cancelled_at' => now(),
+        ]);
+
+        // Invalidar el token para que el link no pueda volver a cancelar
+        $reservation->update(['cancellation_token' => null]);
+
+        return redirect()->route('booking.cancel.done', $reservation->confirmation_code);
+    }
+
+    public function cancelDone(string $code)
+    {
+        $reservation = Reservation::where('confirmation_code', $code)
+            ->with('restaurant')
+            ->firstOrFail();
+
+        return Inertia::render('Booking/CancelDone', [
+            'confirmation_code' => $reservation->confirmation_code,
+            'restaurant'        => [
+                'name'  => $reservation->restaurant->name,
+                'email' => $reservation->restaurant->email,
+            ],
+        ]);
+    }
+
     public function waitlistForm(Request $request)
     {
         $restaurant = Restaurant::where('is_active', true)->firstOrFail();

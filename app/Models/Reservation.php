@@ -31,6 +31,7 @@ class Reservation extends Model
         'confirmation_code',
         'cancelled_at',
         'cancellation_reason',
+        'cancellation_token',
         'google_event_id',
     ];
 
@@ -45,8 +46,9 @@ class Reservation extends Model
         parent::boot();
 
         static::creating(function ($model) {
-            $model->uuid              = $model->uuid ?? Uuid::uuid4()->toString();
-            $model->confirmation_code = $model->confirmation_code ?? strtoupper(Str::random(8));
+            $model->uuid               = $model->uuid ?? Uuid::uuid4()->toString();
+            $model->confirmation_code  = $model->confirmation_code ?? strtoupper(Str::random(8));
+            $model->cancellation_token = $model->cancellation_token ?? Str::random(48);
         });
     }
 
